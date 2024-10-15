@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -13,17 +12,10 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import axios from "axios";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -32,29 +24,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import Header from "@/components/Header/Header";
+import TargetHistory from "@/components/ShowAssignTargetToAdmin/TargetHistory";
 
 // Mock data
 const salespeople = [
-  { name: "Bharat Lal Dubey", jobId: "SP001", area: "North India" },
-  { name: "Soma Naveen Chandra", jobId: "SP002", area: "South India" },
-  { name: "Sugumar R", jobId: "SP003", area: "East India" },
-  { name: "Vineesh Mahta", jobId: "SP004", area: "West India" },
-  { name: "Ravi Kumar N", jobId: "SP005", area: "Central India" },
-  { name: "Sushila Shav", jobId: "SP006", area: "Northeast India" },
-  { name: "Raunak Kalal", jobId: "SP007", area: "Northwest India" },
+  { name: "Ravikumar N", jobId: "KIOL2238", area: "Bangalore" },
+  { name: "Sugumar R", jobId: "KIOL2236", area: "Chennai, TN" },
+  { name: "Vineesh Mehta", jobId: "KIOL2239", area: "Delhi" },
+  { name: "Soma Naveen Chandra", jobId: "KIOL2070", area: "Hyderabad" },
+  { name: "Bharat Lal Dubey", jobId: "KIOL2064", area: "Maharashtra" },
+  { name: "Sushila Shaw", jobId: "KIOL2225", area: "Kolkata" },
+  { name: "Ardhendu Aditya", jobId: "KIOL2234", area: "Kolkata" }
 ];
 
-const mockTargetData = {
-  "2023-05-15": { total: 1000, pending: 400, completed: 600 },
-  "2023-05-16": { total: 1200, pending: 500, completed: 700 },
-  "2023-05-17": { total: 800, pending: 300, completed: 500 },
-};
 
 const mockBarChartData = [
   { name: "Bharat Lal Dubey", completed: 75, pending: 25 },
@@ -67,38 +50,47 @@ const mockBarChartData = [
 ];
 
 export default function TargetAssignmentDashboard() {
-  const [date, setDate] = useState(new Date());
   const [selectedSalesperson, setSelectedSalesperson] = useState(
     salespeople[0]
   );
   const [targetValue, setTargetValue] = useState("");
 
-  const handleDateSelect = (selectedDate) => {
-    setDate(selectedDate);
-  };
-
   const handleSalespersonSelect = (value) => {
     setSelectedSalesperson(salespeople.find((sp) => sp.name === value));
   };
 
-  const handleTargetAssign = () => {
-    console.log(
-      `Assigned target ${targetValue} to ${selectedSalesperson.name}`
-    );
-    setTargetValue("");
-  };
+  const handleTargetAssign = async () => {
+    const token = localStorage.getItem("accessToken"); // Retrieve the Bearer token from local storage
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/admin/monthlyTarget",
+        {
+          target: parseInt(targetValue, 10), // Convert string to number
+          jobId: selectedSalesperson.jobId, // Include jobId in the payload
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Add the Bearer token to the headers
+          },
+        }
+      );
 
-  const formattedDate = date ? format(date, "yyyy-MM-dd") : "";
-  const targetData = mockTargetData[formattedDate] || {
-    total: 0,
-    pending: 0,
-    completed: 0,
+      if (response.status === 200) {
+        alert(
+          `Successfully assigned target of ${targetValue} for ${selectedSalesperson.name}`
+        );
+        setTargetValue(""); // Clear the input after successful assignment
+      }
+    } catch (error) {
+      console.error("Error assigning target:", error);
+      alert("Failed to assign target. Please try again.");
+    }
   };
 
   return (
     <div>
-      {" "}
-      <Header />
+      <Header saleperson={{ name: "Admin", jobId: "ADMIN001" }} />{" "}
+      {/* Replace with your admin details */}
       <div className="container mx-auto p-4 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
@@ -139,53 +131,8 @@ export default function TargetAssignmentDashboard() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Section 2: Total Assign Target */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Total Assign Target</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    initialFocus
-                    onSelect={handleDateSelect}
-                    fromYear={2020}
-                    toYear={2025}
-                    showMonthYearPicker
-                  />
-                </PopoverContent>
-              </Popover>
-              <div className="space-y-2">
-                <p>
-                  <strong>Total Assigned Targets:</strong> {targetData.total}
-                </p>
-                <p>
-                  <strong>Pending Targets:</strong> {targetData.pending}
-                </p>
-                <p>
-                  <strong>Completed Targets:</strong> {targetData.completed}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <TargetHistory />
         </div>
-
         {/* Section 3: Bar Chart (Target vs Salesperson) */}
         <Card>
           <CardHeader>
