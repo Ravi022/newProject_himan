@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import {
   BarChart,
@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header/Header";
 import TargetHistory from "@/components/ShowAssignTargetToAdmin/TargetHistory";
+import ConfirmationSlider from "@/components/ConfirmationSlider/ConfirmationSlider.jsx";
 
 // Mock data
 const salespeople = [
@@ -35,9 +36,8 @@ const salespeople = [
   { name: "Soma Naveen Chandra", jobId: "KIOL2070", area: "Hyderabad" },
   { name: "Bharat Lal Dubey", jobId: "KIOL2064", area: "Maharashtra" },
   { name: "Sushila Shaw", jobId: "KIOL2225", area: "Kolkata" },
-  { name: "Ardhendu Aditya", jobId: "KIOL2234", area: "Kolkata" }
+  { name: "Ardhendu Aditya", jobId: "KIOL2234", area: "Kolkata" },
 ];
-
 
 const mockBarChartData = [
   { name: "Bharat Lal Dubey", completed: 75, pending: 25 },
@@ -54,6 +54,31 @@ export default function TargetAssignmentDashboard() {
     salespeople[0]
   );
   const [targetValue, setTargetValue] = useState("");
+  const [canAssignTasks, setCanAssignTasks] = useState();
+
+  const fetchPermissionStatus = async () => {
+    const token = localStorage.getItem("accessToken"); // Retrieve the Bearer token from local storage
+    try {
+      const response = await axios.get(
+        "http://127.0.0.1:8000/admin/canSalespersonAddTasks",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Add the Bearer token to the headers
+          },
+        }
+      );
+      if (response.status === 200) {
+        setCanAssignTasks(response.data.canAssignTasks);
+        console.log("canAssignTasks :", response.data.canAssignTasks);
+      }
+    } catch (error) {
+      console.error("Error fetching permission status:", error);
+    }
+  };
+  // Fetch salesperson's permission status
+  useEffect(() => {
+    fetchPermissionStatus();
+  }, []); // Fetch on component mount
 
   const handleSalespersonSelect = (value) => {
     setSelectedSalesperson(salespeople.find((sp) => sp.name === value));
@@ -89,10 +114,13 @@ export default function TargetAssignmentDashboard() {
 
   return (
     <div>
-      <Header saleperson={{ name: "Admin", jobId: "ADMIN001" }} />{" "}
-      {/* Replace with your admin details */}
+      <Header saleperson={{ name: "Admin", jobId: "ADMIN001" }} />
       <div className="container mx-auto p-4 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <ConfirmationSlider
+            initialPermission={canAssignTasks}
+            fetchPermissionStatus={fetchPermissionStatus}
+          />
           <Card>
             <CardHeader>
               <CardTitle>Assign Target</CardTitle>
@@ -133,6 +161,23 @@ export default function TargetAssignmentDashboard() {
           </Card>
           <TargetHistory />
         </div>
+
+        {/* Display Can Assign Tasks */}
+        <div className="my-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Salesperson Task Permission</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>
+                {canAssignTasks
+                  ? "Salesperson is allowed to add tasks."
+                  : "Salesperson is not allowed to add tasks."}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Section 3: Bar Chart (Target vs Salesperson) */}
         <Card>
           <CardHeader>

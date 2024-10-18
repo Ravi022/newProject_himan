@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -13,9 +12,7 @@ export default function TaskManager() {
   const [regularTasks, setRegularTasks] = useState([]);
   const [completedTasks, setCompletedTasks] = useState([]);
   const [newTask, setNewTask] = useState("");
-  const [extraTask, setExtraTask] = useState(""); // State for extra tasks
   const [isAddingDisabled, setIsAddingDisabled] = useState(false);
-  const { theme, setTheme } = useTheme();
 
   // Fetch user permissions and tasks from the backend
   const fetchTasksAndPermissions = async () => {
@@ -32,10 +29,9 @@ export default function TaskManager() {
 
       if (response.status === 200) {
         const { canAssignTasks, tasks } = response.data;
-        setIsAddingDisabled(!canAssignTasks); // disable adding if user cannot assign tasks
+        setIsAddingDisabled(!canAssignTasks);
         setRegularTasks(tasks.regularTasks);
-        setCompletedTasks([...tasks.completedTasks, ...tasks.extraAddedTasks]); // Combine completed and extra tasks into the completed list
-        console.log("Permission and tasks:", response.data);
+        setCompletedTasks([...tasks.completedTasks, ...tasks.extraAddedTasks]);
       }
     } catch (error) {
       console.error("Error fetching tasks and permission:", error);
@@ -69,63 +65,18 @@ export default function TaskManager() {
 
       if (response.status === 200) {
         const newTaskObj = {
-          _id: response.data.newTaskId, // Assuming backend returns the new task's ID
+          _id: response.data.newTaskId, // Ensure this ID is returned by the backend
           description: newTask,
           completed: false,
         };
-        setRegularTasks([...regularTasks, newTaskObj]);
-        setNewTask("");
+        setRegularTasks((prevTasks) => [...prevTasks, newTaskObj]);
+        setNewTask(""); // Clear the input after successful assignment
       }
     } catch (error) {
       console.error("Error assigning task:", error);
     }
   };
 
-  const addExtraTask = async (e) => {
-    e.preventDefault();
-    console.log("Attempting to add extra task:", extraTask); // Log input value
-    if (extraTask.trim() === "" || isAddingDisabled) {
-      console.log("Cannot add extra task: empty or disabled");
-      return;
-    }
-  
-    const token = localStorage.getItem("accessToken");
-    const config = {
-      headers: { Authorization: `Bearer ${token}` },
-    };
-  
-    const taskData = {
-      description: extraTask,
-    };
-  
-    try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/user/addExtraTask",
-        taskData,
-        config
-      );
-  
-      console.log("Response from addExtraTask:", response.data); // Log response
-      
-      if (response.status === 200) {
-        const newExtraTaskObj = {
-          _id: response.data.newTaskId, // Ensure the backend returns this ID
-          description: extraTask,
-          completed: true,
-          isExtraTask: true,
-        };
-        
-        setCompletedTasks((prev) => [...prev, newExtraTaskObj]);
-        setExtraTask(""); // Reset the input field
-        fetchTasksAndPermissions(); // Re-fetch permissions and tasks
-      }
-    } catch (error) {
-      console.error("Error adding extra task:", error);
-    }
-  };
-  
-
-  // Toggle task completion and sync with backend
   const toggleTaskCompletion = async (taskId, isCompleted) => {
     const token = localStorage.getItem("accessToken");
     const config = {
@@ -139,21 +90,19 @@ export default function TaskManager() {
         config
       );
 
-      // If successful, update the local UI state
+      // Update local state after successful toggle
       if (isCompleted) {
-        // Move the task from completedTasks to regularTasks
-        const updatedTask = completedTasks.find((task) => task._id === taskId);
-        setCompletedTasks(completedTasks.filter((task) => task._id !== taskId));
-        setRegularTasks([
-          ...regularTasks,
+        setCompletedTasks((prev) => prev.filter((task) => task._id !== taskId));
+        const updatedTask = regularTasks.find((task) => task._id === taskId);
+        setRegularTasks((prev) => [
+          ...prev,
           { ...updatedTask, completed: false },
         ]);
       } else {
-        // Move the task from regularTasks to completedTasks
         const updatedTask = regularTasks.find((task) => task._id === taskId);
-        setRegularTasks(regularTasks.filter((task) => task._id !== taskId));
-        setCompletedTasks([
-          ...completedTasks,
+        setRegularTasks((prev) => prev.filter((task) => task._id !== taskId));
+        setCompletedTasks((prev) => [
+          ...prev,
           { ...updatedTask, completed: true },
         ]);
       }
@@ -170,20 +119,18 @@ export default function TaskManager() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Daily Task Manager</h1>
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <Switch
-              checked={isAddingDisabled} // The switch is controlled by backend data
-              aria-label="Toggle Adding New Tasks"
-              disabled // Prevent users from toggling the switch
-            />
-            <span className="text-sm font-medium">
-              {isAddingDisabled ? (
-                <Lock className="w-4 h-4" />
-              ) : (
-                <Unlock className="w-4 h-4" />
-              )}
-            </span>
-          </div>
+          <Switch
+            checked={isAddingDisabled}
+            aria-label="Toggle Adding New Tasks"
+            disabled
+          />
+          <span className="text-sm font-medium">
+            {isAddingDisabled ? (
+              <Lock className="w-4 h-4" />
+            ) : (
+              <Unlock className="w-4 h-4" />
+            )}
+          </span>
         </div>
       </div>
 
@@ -195,7 +142,7 @@ export default function TaskManager() {
             onChange={(e) => setNewTask(e.target.value)}
             placeholder="Add a new task"
             className="flex-grow"
-            disabled={isAddingDisabled} // Disable input if not allowed to add tasks
+            disabled={isAddingDisabled}
           />
           <Button type="submit" disabled={isAddingDisabled}>
             <PlusCircle className="w-4 h-4 mr-2" />
@@ -250,27 +197,6 @@ export default function TaskManager() {
           </ul>
         )}
       </div>
-
-      {/* {isAddingDisabled && (
-        <form onSubmit={addExtraTask}>
-          <h2 className="text-xl font-semibold mb-3">
-            Add Extra Completed Task
-          </h2>
-          <div className="flex space-x-2">
-            <Input
-              type="text"
-              value={extraTask}
-              onChange={(e) => setExtraTask(e.target.value)}
-              placeholder="Add an extra completed task"
-              className="flex-grow"
-            />
-            <Button type="submit">
-              <CheckCircle2 className="w-4 h-4 mr-2" />
-              Add
-            </Button>
-          </div>
-        </form>
-      )} */}
     </div>
   );
 }
