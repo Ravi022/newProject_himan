@@ -43,7 +43,7 @@ export default function Header({ saleperson }) {
   const isAdmin = saleperson.role === "admin";
 
   return (
-    <header className="bg-background text-foreground shadow-md">
+    <header className="bg-background text-foreground shadow-md border-b">
       <div className="container mx-auto flex justify-between items-center">
         <Image
           src={companyLogo}

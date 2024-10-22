@@ -1,21 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { format } from "date-fns";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import axios from "axios";
-
+import { useTheme } from "next-themes";
+import {
+  FileSpreadsheet,
+  Box,
+  TruckIcon,
+  BarChart3,
+  ChevronDown,
+  Download,
+  ExternalLink,
+  Sun,
+  Moon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -23,198 +24,234 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import Header from "@/components/Header/Header";
-import TargetHistory from "@/components/ShowAssignTargetToAdmin/TargetHistory";
-import ConfirmationSlider from "@/components/ConfirmationSlider/ConfirmationSlider.jsx";
 
-// Mock data
-const salespeople = [
-  { name: "Ravikumar N", jobId: "KIOL2238", area: "Bangalore" },
-  { name: "Sugumar R", jobId: "KIOL2236", area: "Chennai, TN" },
-  { name: "Vineesh Mehta", jobId: "KIOL2239", area: "Delhi" },
-  { name: "Soma Naveen Chandra", jobId: "KIOL2070", area: "Hyderabad" },
-  { name: "Bharat Lal Dubey", jobId: "KIOL2064", area: "Maharashtra" },
-  { name: "Sushila Shaw", jobId: "KIOL2225", area: "Kolkata" },
-  { name: "Ardhendu Aditya", jobId: "KIOL2234", area: "Kolkata" },
+const categories = [
+  { name: "glovesProduction", icon: FileSpreadsheet, color: "bg-blue-500" },
+  { name: "fgStocks", icon: Box, color: "bg-green-500" },
+  { name: "dispatchDetails", icon: TruckIcon, color: "bg-yellow-500" },
+  { name: "productionReport", icon: BarChart3, color: "bg-purple-500" },
 ];
 
-const mockBarChartData = [
-  { name: "Bharat Lal Dubey", completed: 75, pending: 25 },
-  { name: "Soma Naveen Chandra", completed: 60, pending: 40 },
-  { name: "Sugumar R", completed: 80, pending: 20 },
-  { name: "Vineesh Mahta", completed: 70, pending: 30 },
-  { name: "Ravi Kumar N", completed: 65, pending: 35 },
-  { name: "Sushila Shav", completed: 85, pending: 15 },
-  { name: "Raunak Kalal", completed: 55, pending: 45 },
+const months = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ];
 
-export default function TargetAssignmentDashboard() {
-  const [selectedSalesperson, setSelectedSalesperson] = useState(
-    salespeople[0]
-  );
-  const [targetValue, setTargetValue] = useState("");
-  const [canAssignTasks, setCanAssignTasks] = useState();
+const currentYear = new Date().getFullYear();
+const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
-  const fetchPermissionStatus = async () => {
-    const token = localStorage.getItem("accessToken"); // Retrieve the Bearer token from local storage
-    try {
-      const response = await axios.get(
-        "http://127.0.0.1:8000/admin/canSalespersonAddTasks",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Add the Bearer token to the headers
-          },
-        }
-      );
-      if (response.status === 200) {
-        setCanAssignTasks(response.data.canAssignTasks);
-        console.log("canAssignTasks :", response.data.canAssignTasks);
-      }
-    } catch (error) {
-      console.error("Error fetching permission status:", error);
-    }
-  };
-  // Fetch salesperson's permission status
+export default function AdminDashboard() {
+  const router = useRouter();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [fileUrl, setFileUrl] = useState("");
+  const [s3Key, setS3Key] = useState("");
+
   useEffect(() => {
-    fetchPermissionStatus();
-  }, []); // Fetch on component mount
+    setMounted(true);
+  }, []);
 
-  const handleSalespersonSelect = (value) => {
-    setSelectedSalesperson(salespeople.find((sp) => sp.name === value));
-  };
+  const handleCategoryClick = async (category) => {
+    setSelectedCategory(category);
 
-  const handleTargetAssign = async () => {
-    const token = localStorage.getItem("accessToken"); // Retrieve the Bearer token from local storage
-    try {
-      const response = await axios.post(
-        "http://127.0.0.1:8000/admin/monthlyTarget",
-        {
-          target: parseInt(targetValue, 10), // Convert string to number
-          jobId: selectedSalesperson.jobId, // Include jobId in the payload
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Add the Bearer token to the headers
-          },
-        }
-      );
-
-      if (response.status === 200) {
-        alert(
-          `Successfully assigned target of ${targetValue} for ${selectedSalesperson.name}`
+    if (category !== "productionReport") {
+      // Fetch latest file for the category
+      const accessToken = localStorage.getItem("accessToken"); // Get accessToken from localStorage
+      try {
+        const response = await axios.post(
+          "http://127.0.0.1:8000/admin/files",
+          { fileType: category },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
         );
-        setTargetValue(""); // Clear the input after successful assignment
+        console.log("CategoryClick:", response.data);
+        setFileUrl(response.data.s3FileUrl); // Set file URL for the selected category
+        setS3Key(response.data.s3Key); // Set s3Key for downloading
+      } catch (error) {
+        console.error("Error fetching file:", error);
       }
-    } catch (error) {
-      console.error("Error assigning target:", error);
-      alert("Failed to assign target. Please try again.");
     }
   };
+
+  const handleDownload = () => {
+    if (!fileUrl) return; // If no file URL is present
+
+    // Create a link element to download the file
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.setAttribute("download", s3Key.split("/").pop()); // Extract file name from s3Key
+    document.body.appendChild(link);
+
+    // Simulate a click on the link to trigger the download
+    link.click();
+
+    // Clean up by removing the link after download is initiated
+    link.parentNode.removeChild(link);
+  };
+
+  const handleProductionReportSubmit = async () => {
+    if (selectedMonth && selectedYear) {
+      const accessToken = localStorage.getItem("accessToken");
+
+      try {
+        const response = await axios.post(
+          "http://127.0.0.1:8000/admin/files",
+          {
+            fileType: "productionReport",
+            month: selectedMonth,
+            year: selectedYear,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        console.log("productionReport:", response.data);
+        setFileUrl(response.data.s3FileUrl); // Set file URL for the production report
+        setS3Key(response.data.s3Key); // Set s3Key for downloading
+      } catch (error) {
+        console.error("Error fetching production report:", error);
+      }
+    }
+  };
+
+  if (!mounted) return null;
 
   return (
-    <div>
+    <div className="min-h-screen bg-background text-foreground">
       <Header saleperson={{ name: "Admin", jobId: "ADMIN001" }} />
-      <div className="container mx-auto p-4 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <ConfirmationSlider
-            initialPermission={canAssignTasks}
-            fetchPermissionStatus={fetchPermissionStatus}
-          />
-          <Card>
-            <CardHeader>
-              <CardTitle>Assign Target</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Select onValueChange={handleSalespersonSelect}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Salesperson" />
-                </SelectTrigger>
-                <SelectContent>
-                  {salespeople.map((sp) => (
-                    <SelectItem key={sp.jobId} value={sp.name}>
-                      {sp.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedSalesperson && (
-                <div className="space-y-2">
-                  <p>
-                    <strong>Job ID:</strong> {selectedSalesperson.jobId}
-                  </p>
-                  <p>
-                    <strong>Area Coverage:</strong> {selectedSalesperson.area}
-                  </p>
-                </div>
-              )}
-              <div className="flex space-x-2">
-                <Input
-                  type="number"
-                  placeholder="Enter target value"
-                  value={targetValue}
-                  onChange={(e) => setTargetValue(e.target.value)}
-                />
-                <Button onClick={handleTargetAssign}>Assign</Button>
-              </div>
-            </CardContent>
-          </Card>
-          <TargetHistory />
-        </div>
+      <div className="p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <Button
+              onClick={() => router.push("/admin/sales")}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              Sales <ExternalLink className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
 
-        {/* Display Can Assign Tasks */}
-        <div className="my-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Salesperson Task Permission</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>
-                {canAssignTasks
-                  ? "Salesperson is allowed to add tasks."
-                  : "Salesperson is not allowed to add tasks."}
-              </p>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {categories.map((category) => (
+              <Dialog key={category.name}>
+                <DialogTrigger asChild>
+                  <Card
+                    className="cursor-pointer transition-all hover:shadow-lg hover:scale-105"
+                    onClick={() => handleCategoryClick(category.name)}
+                  >
+                    <CardContent className="flex flex-col items-center justify-center p-6">
+                      <div
+                        className={`${category.color} text-white p-3 rounded-full mb-4`}
+                      >
+                        <category.icon className="h-8 w-8" />
+                      </div>
+                      <h2 className="text-lg font-semibold capitalize">
+                        {category.name}
+                      </h2>
+                    </CardContent>
+                  </Card>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle className="capitalize">
+                      {category.name}
+                    </DialogTitle>
+                  </DialogHeader>
+                  {category.name === "productionReport" ? (
+                    <div className="grid gap-4">
+                      <Select onValueChange={setSelectedMonth}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {months.map((month) => (
+                            <SelectItem key={month} value={month}>
+                              {month}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select onValueChange={setSelectedYear}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select year" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {years.map((year) => (
+                            <SelectItem key={year} value={year.toString()}>
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        onClick={handleProductionReportSubmit}
+                        className="w-full mt-4"
+                      >
+                        Submit
+                      </Button>
+                    </div>
+                  ) : null}
+                  <div className="h-[300px] bg-muted rounded-md p-4 overflow-auto">
+                    {fileUrl ? (
+                      // If the file is a PDF or an image, display it using an iframe or embed tag
+                      /\.(pdf|jpg|jpeg|png)$/.test(s3Key) ? (
+                        <iframe
+                          src={fileUrl}
+                          title="File Viewer"
+                          width="100%"
+                          height="300px"
+                          className="rounded-md"
+                        ></iframe>
+                      ) : (
+                        // For .xlsx or other non-displayable files, show the download link
+                        <a
+                          href={fileUrl}
+                          download={s3Key.split("/").pop()}
+                          className="text-primary"
+                        >
+                          Download File
+                        </a>
+                      )
+                    ) : (
+                      <p className="text-muted-foreground">
+                        File content would be displayed here.
+                      </p>
+                    )}
+                  </div>
+                  <Button onClick={handleDownload} className="w-full mt-4">
+                    <Download className="mr-2 h-4 w-4" /> Download
+                  </Button>
+                </DialogContent>
+              </Dialog>
+            ))}
+          </div>
         </div>
-
-        {/* Section 3: Bar Chart (Target vs Salesperson) */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Target vs Salesperson</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart
-                data={mockBarChartData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar
-                  dataKey="completed"
-                  stackId="a"
-                  fill="#8884d8"
-                  name="Completed Targets"
-                />
-                <Bar
-                  dataKey="pending"
-                  stackId="a"
-                  fill="#82ca9d"
-                  name="Pending Targets"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
