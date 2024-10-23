@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import axios from "axios";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,40 +21,39 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const salespeople = [
-  { id: "1", name: "John Doe" },
-  { id: "2", name: "Jane Smith" },
-  { id: "3", name: "Bob Johnson" },
+  { id: "SP001", name: "Ravikumar N", jobId: "KIOL2238", area: "Bangalore" },
+  { id: "SP002", name: "Sugumar R", jobId: "KIOL2236", area: "Chennai, TN" },
+  { id: "SP003", name: "Vineesh Mehta", jobId: "KIOL2239", area: "Delhi" },
+  {
+    id: "SP004",
+    name: "Soma Naveen Chandra",
+    jobId: "KIOL2070",
+    area: "Hyderabad",
+  },
+  {
+    id: "SP005",
+    name: "Bharat Lal Dubey",
+    jobId: "KIOL2064",
+    area: "Maharashtra",
+  },
+  { id: "SP006", name: "Sushila Shaw", jobId: "KIOL2225", area: "Kolkata" },
+  { id: "SP007", name: "Ardhendu Aditya", jobId: "KIOL2234", area: "Kolkata" },
 ];
-
-const mockTasks = {
-  completed: [
-    "Finalized contract with ABC Corp for $500,000 annual subscription",
-    "Conducted product demo for XYZ Inc, resulting in a successful upsell of premium features",
-    "Completed quarterly sales report and presented findings to management team",
-    "Finalized contract with ABC Corp for $500,000 annual subscription",
-  ],
-  incomplete: [
-    "Follow up with potential client DEF Ltd regarding their interest in our enterprise solution",
-    "Prepare proposal for GHI Co's custom integration requirements",
-    "Schedule meeting with JKL Corp to discuss renewal options and potential upgrades",
-  ],
-  extra: [
-    "Attended industry conference and networked with 15 potential leads",
-    "Contributed to the development of new sales strategies for Q3",
-    "Mentored junior sales representative in closing techniques and objection handling",
-  ],
-};
 
 const TaskList = ({ tasks, title }) => (
   <div className="space-y-2">
     <h3 className="text-lg font-semibold capitalize">{title}</h3>
     <ul className="space-y-2">
-      {tasks.map((task, index) => (
-        <li key={index} className="flex items-start space-x-2">
-          <span className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-primary" />
-          <span className="text-sm">{task}</span>
-        </li>
-      ))}
+      {tasks.length > 0 ? (
+        tasks.map((task, index) => (
+          <li key={index} className="flex items-start space-x-2">
+            <span className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-primary" />
+            <span className="text-sm">{task.taskDescription}</span>
+          </li>
+        ))
+      ) : (
+        <p>No available tasks</p>
+      )}
     </ul>
   </div>
 );
@@ -61,10 +61,51 @@ const TaskList = ({ tasks, title }) => (
 export default function AdminTasks() {
   const [date, setDate] = useState(new Date());
   const [selectedSalesperson, setSelectedSalesperson] = useState("");
+  const [tasksData, setTasksData] = useState({
+    tasks: [],
+    completedTasks: [],
+    incompleteTasks: [],
+    extraTasks: [],
+  });
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
-    console.log("Submitted:", { date, selectedSalesperson });
-    // Here you would typically fetch tasks based on the selected date and salesperson
+  const handleSubmit = async () => {
+    if (!selectedSalesperson) {
+      alert("Please select a salesperson");
+      return;
+    }
+
+    const formattedDate = date.getDate();
+    const formattedMonth = date.getMonth() + 1; // JavaScript months are 0-based
+    const formattedYear = date.getFullYear();
+
+    const payload = {
+      date: formattedDate,
+      month: formattedMonth,
+      year: formattedYear,
+      jobId: selectedSalesperson,
+    };
+
+    const token = localStorage.getItem("accessToken");
+    console.log("payload :", payload);
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        "http://127.0.0.1:8000/admin/adminViewTasks",
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setTasksData(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      setLoading(false);
+      alert("Failed to fetch tasks. Please try again.");
+    }
   };
 
   return (
@@ -90,14 +131,14 @@ export default function AdminTasks() {
               </SelectTrigger>
               <SelectContent>
                 {salespeople.map((person) => (
-                  <SelectItem key={person.id} value={person.id}>
-                    {person.name}
+                  <SelectItem key={person.id} value={person.jobId}>
+                    {person.name} (Job ID: {person.jobId})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Button onClick={handleSubmit} className="w-full">
-              Submit
+              {loading ? "Loading..." : "Submit"}
             </Button>
           </CardContent>
         </Card>
@@ -111,14 +152,21 @@ export default function AdminTasks() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(mockTasks).map(([category, tasks]) => (
-                <ScrollArea
-                  key={category}
-                  className="h-[calc(100vh-30rem)] pr-4"
-                >
-                  <TaskList tasks={tasks} title={`${category} Tasks`} />
-                </ScrollArea>
-              ))}
+              <ScrollArea className="h-[calc(100vh-30rem)] pr-4">
+                <TaskList
+                  tasks={tasksData.completedTasks}
+                  title="Completed Tasks"
+                />
+              </ScrollArea>
+              <ScrollArea className="h-[calc(100vh-30rem)] pr-4">
+                <TaskList
+                  tasks={tasksData.incompleteTasks}
+                  title="Incomplete Tasks"
+                />
+              </ScrollArea>
+              <ScrollArea className="h-[calc(100vh-30rem)] pr-4">
+                <TaskList tasks={tasksData.extraTasks} title="Extra Tasks" />
+              </ScrollArea>
             </div>
           </CardContent>
         </Card>

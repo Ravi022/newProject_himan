@@ -32,6 +32,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import Header from "@/components/Header/Header";
+import MTDDashboardDisplay from "@/components/MTDDashboardDisplay/MTDDashboardDisplay";
 
 const categories = [
   { name: "glovesProduction", icon: FileSpreadsheet, color: "bg-blue-500" },
@@ -145,16 +146,13 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Header saleperson={{ name: "Admin", jobId: "ADMIN001" }} />
-      <div className="p-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="p-8 max-w-7xl flex flex-row justify-center items-center w-full">
+        <MTDDashboardDisplay />
+      </div>
+      <div className="px-12">
+        <div className="max-w-7xl">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <Button
-              onClick={() => router.push("/admin/sales")}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              Sales <ExternalLink className="ml-2 h-4 w-4" />
-            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

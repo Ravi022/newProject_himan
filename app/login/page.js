@@ -44,28 +44,42 @@ export default function LoginPage() {
           localStorage.getItem("accessToken"),
           localStorage.getItem("refreshToken")
         );
-        if (response.data.data.user.role === "salesperson") {
+
+        const userRole = response.data.data.user.role;
+        if (userRole === "salesperson") {
           const userDetails = {
             name: response.data.data.user.fullName,
             area: response.data.data.user.area,
             jobId: response.data.data.user.jobId,
             totalTargetCompleted: response.data.data.user.totalTargetCompleted,
-            role: response.data.data.user.role,
+            role: userRole,
           };
 
           // Convert the object to a JSON string and store it in localStorage
           localStorage.setItem("userDetails", JSON.stringify(userDetails));
           console.log(userDetails);
           router.push("/");
-        } else if (response.data.data.user.role === "admin") {
-          console.log("admin login :", response.data);
+        } else if (userRole === "admin") {
+          console.log("admin login:", response.data);
           const adminDetails = {
             name: response.data.data.user.fullName,
             jobId: response.data.data.user.jobId,
-            role: response.data.data.user.role,
+            role: userRole,
           };
           localStorage.setItem("adminDetails", JSON.stringify(adminDetails));
           router.push("/admin");
+        } else if (userRole === "production") {
+          console.log("production login:", response.data);
+          const productionDetails = {
+            name: response.data.data.user.fullName,
+            jobId: response.data.data.user.jobId,
+            role: userRole,
+          };
+          localStorage.setItem(
+            "productionDetails",
+            JSON.stringify(productionDetails)
+          );
+          router.push("/production");
         } else {
           router.push("/login");
         }
