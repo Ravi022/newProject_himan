@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+
 import axios from "axios";
 import { useTheme } from "next-themes";
 import {
@@ -60,7 +60,7 @@ const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
 export default function AdminDashboard() {
-  const router = useRouter();
+  
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -148,6 +148,7 @@ export default function AdminDashboard() {
       <Header saleperson={{ name: "Admin", jobId: "ADMIN001" }} />
       <div className="p-8 max-w-7xl flex flex-row justify-center items-center w-full">
         <MTDDashboardDisplay />
+        
       </div>
       <div className="px-12">
         <div className="max-w-7xl">

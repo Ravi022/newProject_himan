@@ -1,10 +1,18 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Moon, Sun, ArrowUpIcon, ArrowDownIcon, MinusIcon } from "lucide-react";
+import {
+  Moon,
+  Sun,
+  ArrowUpIcon,
+  ArrowDownIcon,
+  MinusIcon,
+  ExternalLink,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useRouter } from "next/navigation";
 
 const formatNumber = (num) => {
   return new Intl.NumberFormat("en-US").format(num || 0);
@@ -44,6 +52,7 @@ function MetricCard({ label, current, previous }) {
 
 export default function MTDDashboardDisplay() {
   const { theme, setTheme } = useTheme();
+  const router = useRouter();
 
   const currentData = {
     totalDispatch: 10000,
@@ -71,16 +80,10 @@ export default function MTDDashboardDisplay() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">MTD Dashboard</h1>
         <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-          aria-label="Toggle theme"
+          onClick={() => router.push("/admin/sales")}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground"
         >
-          {theme === "light" ? (
-            <Moon className="h-6 w-6" />
-          ) : (
-            <Sun className="h-6 w-6" />
-          )}
+          Sales <ExternalLink className="ml-2 h-4 w-4" />
         </Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
