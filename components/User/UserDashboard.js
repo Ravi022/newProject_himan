@@ -18,7 +18,7 @@ import TargetInformation from "../TargetInformation/TargetInformation";
 import TargetPieChart from "./TargetPieChart";
 import LoadingSkeleton from "./LoadingSkeleton"; // Import the skeleton component
 
-export default function SalesManagerDashboard({ salesManager }) {
+export default function SalesManagerDashboard() {
   const [date, setDate] = useState(new Date());
   const [assignedTarget, setAssignedTarget] = useState(0);
   const [completedTarget, setCompletedTarget] = useState(0);
@@ -65,6 +65,16 @@ export default function SalesManagerDashboard({ salesManager }) {
   useEffect(() => {
     fetchData();
   }, [date]);
+
+  const [salesManager, setSalesManager] = useState({});
+
+  useEffect(() => {
+    const salespersonDetails = localStorage.getItem("userDetails");
+    if (salespersonDetails) {
+      const salesManager = JSON.parse(salespersonDetails);
+      setSalesManager(salesManager);
+    }
+  }, []);
 
   const handleDateSelect = (selectedDate) => {
     setDate(selectedDate);

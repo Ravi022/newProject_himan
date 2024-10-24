@@ -66,7 +66,7 @@ export default function LoginPage() {
             jobId: response.data.data.user.jobId,
             role: userRole,
           };
-          localStorage.setItem("adminDetails", JSON.stringify(adminDetails));
+          localStorage.setItem("userDetails", JSON.stringify(adminDetails));
           router.push("/admin");
         } else if (userRole === "production") {
           console.log("production login:", response.data);
@@ -76,7 +76,7 @@ export default function LoginPage() {
             role: userRole,
           };
           localStorage.setItem(
-            "productionDetails",
+            "userDetails",
             JSON.stringify(productionDetails)
           );
           router.push("/production");

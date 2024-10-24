@@ -1,6 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import axios from "axios"; // Make sure axios is installed in your project
+import { useRouter } from "next/navigation"; // Import the useRouter hook
 
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Header from "@/components/Header/Header";
 
-export default function page() {
+export default function Page() {
+  const router = useRouter(); // Initialize the useRouter hook
+
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -24,7 +28,7 @@ export default function page() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -43,13 +47,36 @@ export default function page() {
       return;
     }
 
-    // Here you would typically make an API call to change the password
-    console.log("Password change submitted:", { oldPassword, newPassword });
+    try {
+      const accessToken = localStorage.getItem("accessToken"); // Retrieve the token from localStorage
 
-    // Reset form after successful submission
-    setOldPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
+      const response = await axios.post(
+        "http://localhost:8000/common/changePassword",
+        {
+          oldPassword: oldPassword,
+          newPassword: newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`, // Send the token in the Authorization header
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        alert("Password changed successfully"); // Show success alert
+        setOldPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        router.back(); // Navigate to the previous page
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+      setError(
+        error.response?.data?.message ||
+          "An error occurred while changing the password"
+      );
+    }
   };
 
   const togglePasswordVisibility = (field) => {

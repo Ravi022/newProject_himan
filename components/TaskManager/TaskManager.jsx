@@ -52,7 +52,6 @@ export default function TaskManager() {
     };
 
     const taskData = {
-      jobId: "J1", // Ensure this is dynamic or relevant
       tasks: [{ description: newTask, isExtraTask: false }],
     };
 
@@ -71,6 +70,7 @@ export default function TaskManager() {
         };
         setRegularTasks((prevTasks) => [...prevTasks, newTaskObj]);
         setNewTask(""); // Clear the input after successful assignment
+        fetchTasksAndPermissions();
       }
     } catch (error) {
       console.error("Error assigning task:", error);

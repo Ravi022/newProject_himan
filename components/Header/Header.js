@@ -1,10 +1,9 @@
 "use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios"; // Axios for API calls
 import Image from "next/image";
 import { User, Settings, LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
-
+import { useRouter } from "next/navigation"; // For routing/navigation
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,23 +23,78 @@ const user = {
   avatarUrl: "https://github.com/shadcn.png",
 };
 
-export default function Header({ saleperson }) {
-  const [theme, setTheme] = useState("light"); // Initialize with "light" theme
-  const router = useRouter(); // Initialize the useRouter hook
+export default function Header() {
+  const [theme, setTheme] = useState("light"); // Default to "light" mode
+  const router = useRouter();
+  const [salesperson, setSalesperson] = useState({});
 
-  // Toggle theme between light and dark
+  useEffect(() => {
+    const salespersonDetails = localStorage.getItem("userDetails");
+    if (salespersonDetails) {
+      const salesManager = JSON.parse(salespersonDetails);
+      setSalesperson(salesManager);
+    }
+  }, []);
+
+  console.log("salesperson:", salesperson);
+
+  // Fetch theme from localStorage on initial render
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme");
+    if (storedTheme) {
+      setTheme(storedTheme);
+      document.documentElement.classList.toggle("dark", storedTheme === "dark");
+    } else {
+      // Set default theme to dark
+      setTheme("dark");
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    }
+  }, []);
+
+  // Toggle theme between light and dark and store it in localStorage
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light";
     setTheme(newTheme);
-    document.documentElement.classList.toggle("dark", newTheme === "dark"); // Ensure class is only added for dark mode
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
+    localStorage.setItem("theme", newTheme);
   };
 
   const handleChangePasswordClick = () => {
     router.push("/changePassword"); // Navigate to the changePassword page
   };
 
+  const handleOnClickLogout = async () => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+
+      // Make the logout request to the backend
+      const response = await axios.get(
+        "http://localhost:8000/common/logoutUser",
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`, // Send token in the header
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        // Clear tokens or relevant user data from localStorage
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userDetails");
+
+        // Navigate to the login page
+        router.push("/login");
+      }
+    } catch (error) {
+      console.error("Error logging out:", error);
+      // Optionally, handle the error (show a notification, etc.)
+    }
+  };
+
   // Determine if the user is an admin
-  const isAdmin = saleperson.role === "admin";
+  const isAdmin = salesperson.role === "admin";
 
   return (
     <header className="bg-background text-foreground shadow-md border-b">
@@ -51,6 +105,8 @@ export default function Header({ saleperson }) {
           width={120}
           height={40}
           className="dark:invert"
+          style={{ height: "auto" }} // Maintain aspect ratio
+          priority // Add priority if it's above the fold
         />
 
         <div className="flex items-center space-x-4">
@@ -70,16 +126,11 @@ export default function Header({ saleperson }) {
                 <Avatar className="h-8 w-8">
                   <AvatarImage
                     src={
-                      saleperson.avatarUrl || "https://github.com/shadcn.png"
+                      salesperson.avatarUrl || "https://github.com/shadcn.png"
                     }
-                    alt={saleperson.name}
+                    alt={salesperson.name}
                   />
-                  <AvatarFallback>
-                    {saleperson.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
+                  <AvatarFallback>{salesperson.name}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
@@ -87,15 +138,15 @@ export default function Header({ saleperson }) {
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">
-                    {saleperson.name}
+                    {salesperson.name}
                   </p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    Job ID: {saleperson.jobId}
+                    Job ID: {salesperson.jobId}
                   </p>
                   {/* Show area only for salespersons */}
                   {isAdmin ? null : (
                     <p className="text-xs leading-none text-muted-foreground">
-                      Area: {saleperson.area}
+                      Area: {salesperson.area}
                     </p>
                   )}
                 </div>
@@ -110,7 +161,7 @@ export default function Header({ saleperson }) {
                 <span>Change Password</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleOnClickLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>

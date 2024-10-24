@@ -1,11 +1,26 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LoadingSkeleton() {
+  const [theme, setTheme] = useState("light"); // Default to light theme
+
+  // Fetch theme from localStorage on initial render
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme");
+    if (storedTheme) {
+      setTheme(storedTheme); // Set theme to what's stored
+    }
+  }, []);
+
   return (
-    <div className="flex flex-col md:flex-row bg-background text-foreground">
+    <div
+      className={`flex flex-col md:flex-row ${
+        theme === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"
+      }`}
+    >
       {/* Left Section */}
       <div className="w-full md:w-2/3 p-6 space-y-6">
         <div className="flex justify-between items-center">
