@@ -28,6 +28,7 @@ import Header from "@/components/Header/Header";
 import TargetHistory from "@/components/ShowAssignTargetToAdmin/TargetHistory";
 import ConfirmationSlider from "@/components/ConfirmationSlider/ConfirmationSlider.jsx";
 import AdminTasks from "../../../components/AdminTasks/AdminTasks.jsx";
+import ProtectedRouteAdmin from "@/components/ProtectedRouteAdmin/ProtectedRouteAdmin.js";
 
 // Mock data
 const salespeople = [

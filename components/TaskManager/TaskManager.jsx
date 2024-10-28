@@ -30,6 +30,7 @@ export default function TaskManager() {
       if (response.status === 200) {
         const { canAssignTasks, tasks } = response.data;
         setIsAddingDisabled(!canAssignTasks);
+        console.log("canAsignTasks", canAssignTasks);
         setRegularTasks(tasks.regularTasks);
         setCompletedTasks([...tasks.completedTasks, ...tasks.extraAddedTasks]);
       }

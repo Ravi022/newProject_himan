@@ -1,5 +1,6 @@
 import localFont from "next/font/local";
 import "./globals.css";
+import ProtectedRoute from "@/components/ProtectedRouteSalesperson/ProtectedRoute";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
