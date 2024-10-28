@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-
+import { useRouter } from "next/navigation"; // Updated for the app directory
 import axios from "axios";
 import { useTheme } from "next-themes";
 import {
@@ -9,11 +9,8 @@ import {
   Box,
   TruckIcon,
   BarChart3,
-  ChevronDown,
   Download,
   ExternalLink,
-  Sun,
-  Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,6 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import Header from "@/components/Header/Header";
 import MTDDashboardDisplay from "@/components/MTDDashboardDisplay/MTDDashboardDisplay";
+import StockCard from "@/components/AdminStockCard/AdminStockCard";
 
 const categories = [
   { name: "glovesProduction", icon: FileSpreadsheet, color: "bg-blue-500" },
@@ -60,7 +58,7 @@ const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
 
 export default function AdminDashboard() {
-  
+  const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -77,21 +75,16 @@ export default function AdminDashboard() {
     setSelectedCategory(category);
 
     if (category !== "productionReport") {
-      // Fetch latest file for the category
-      const accessToken = localStorage.getItem("accessToken"); // Get accessToken from localStorage
+      const accessToken = localStorage.getItem("accessToken");
       try {
         const response = await axios.post(
           "http://127.0.0.1:8000/admin/files",
           { fileType: category },
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
+          { headers: { Authorization: `Bearer ${accessToken}` } }
         );
         console.log("CategoryClick:", response.data);
-        setFileUrl(response.data.s3FileUrl); // Set file URL for the selected category
-        setS3Key(response.data.s3Key); // Set s3Key for downloading
+        setFileUrl(response.data.s3FileUrl);
+        setS3Key(response.data.s3Key);
       } catch (error) {
         console.error("Error fetching file:", error);
       }
@@ -99,19 +92,14 @@ export default function AdminDashboard() {
   };
 
   const handleDownload = () => {
-    if (!fileUrl) return; // If no file URL is present
+    if (!fileUrl) return;
 
-    // Create a link element to download the file
     const link = document.createElement("a");
     link.href = fileUrl;
-    link.setAttribute("download", s3Key.split("/").pop()); // Extract file name from s3Key
+    link.setAttribute("download", s3Key.split("/").pop());
     document.body.appendChild(link);
-
-    // Simulate a click on the link to trigger the download
     link.click();
-
-    // Clean up by removing the link after download is initiated
-    link.parentNode.removeChild(link);
+    document.body.removeChild(link);
   };
 
   const handleProductionReportSubmit = async () => {
@@ -126,15 +114,11 @@ export default function AdminDashboard() {
             month: selectedMonth,
             year: selectedYear,
           },
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
+          { headers: { Authorization: `Bearer ${accessToken}` } }
         );
         console.log("productionReport:", response.data);
-        setFileUrl(response.data.s3FileUrl); // Set file URL for the production report
-        setS3Key(response.data.s3Key); // Set s3Key for downloading
+        setFileUrl(response.data.s3FileUrl);
+        setS3Key(response.data.s3Key);
       } catch (error) {
         console.error("Error fetching production report:", error);
       }
@@ -148,12 +132,22 @@ export default function AdminDashboard() {
       <Header saleperson={{ name: "Admin", jobId: "ADMIN001" }} />
       <div className="p-8 max-w-7xl flex flex-row justify-center items-center w-full">
         <MTDDashboardDisplay />
-        
       </div>
-      <div className="px-12">
+      <div className="p-3 max-w-6xl mx-8">
+        <StockCard />
+      </div>
+      <div>
+        <Button
+          onClick={() => mounted && router.push("/admin/sales")}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground absolute top-40 right-10"
+        >
+          Sales <ExternalLink className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+      <div className="px-10 p-2">
         <div className="max-w-7xl">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -218,7 +212,6 @@ export default function AdminDashboard() {
                   ) : null}
                   <div className="h-[300px] bg-muted rounded-md p-4 overflow-auto">
                     {fileUrl ? (
-                      // If the file is a PDF or an image, display it using an iframe or embed tag
                       /\.(pdf|jpg|jpeg|png)$/.test(s3Key) ? (
                         <iframe
                           src={fileUrl}
@@ -228,7 +221,6 @@ export default function AdminDashboard() {
                           className="rounded-md"
                         ></iframe>
                       ) : (
-                        // For .xlsx or other non-displayable files, show the download link
                         <a
                           href={fileUrl}
                           download={s3Key.split("/").pop()}

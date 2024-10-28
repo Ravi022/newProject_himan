@@ -1,101 +1,165 @@
-"use client";
-
-import { useTheme } from "next-themes";
-import {
-  Moon,
-  Sun,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  MinusIcon,
-  ExternalLink,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useRouter } from "next/navigation";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 
-const formatNumber = (num) => {
-  return new Intl.NumberFormat("en-US").format(num || 0);
-};
+const MetricCard = ({ title, todayValue, mtdValue, info }) => (
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <CardTitle className="text-sm font-medium">
+        {title}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger className="ml-1">
+              <Info className="h-4 w-4 text-muted-foreground" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{info}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="text-2xl font-bold">{mtdValue.toLocaleString()}</div>
+      <p className="text-xs text-muted-foreground">Month-to-Date</p>
+      <div className="mt-4 text-lg font-semibold">
+        {todayValue.toLocaleString()}
+      </div>
+      <p className="text-xs text-muted-foreground">Today</p>
+    </CardContent>
+  </Card>
+);
 
-const getPercentageChange = (current, previous) => {
-  if (!previous || !current) return 0;
-  return ((current - previous) / previous) * 100;
-};
+const AdminMetricsDashboard = () => {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [metrics, setMetrics] = useState({
+    "Total Dispatch": { today: 0, mtd: 0 },
+    Production: { today: 0, mtd: 0 },
+    Packing: { today: 0, mtd: 0 },
+    Sales: { today: 0, mtd: 0 },
+  });
 
-const PercentageChange = ({ value }) => {
-  if (value === 0) return <MinusIcon className="h-4 w-4 text-gray-500" />;
-  const Icon = value > 0 ? ArrowUpIcon : ArrowDownIcon;
-  const color = value > 0 ? "text-green-500" : "text-red-500";
+  const fetchMetrics = async (date) => {
+    const year = date.getFullYear();
+    const month = date.toLocaleString("default", { month: "long" });
+    const day = date.getDate();
+    const accessToken = localStorage.getItem("accessToken");
+
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/admin/mtd/values",
+        { year, month, day },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+
+      if (response.status === 200) {
+        const data = response.data;
+        console.log("Response data:", data);
+
+        setMetrics({
+          "Total Dispatch": {
+            today: data?.dayReport?.totaldispatch || 0,
+            mtd: data?.monthReportTillDate?.totaldispatch || 0,
+          },
+          Production: {
+            today: data?.dayReport?.production || 0,
+            mtd: data?.monthReportTillDate?.production || 0,
+          },
+          Packing: {
+            today: data?.dayReport?.packing || 0,
+            mtd: data?.monthReportTillDate?.packing || 0,
+          },
+          Sales: {
+            today: data?.dayReport?.sales || 0,
+            mtd: data?.monthReportTillDate?.sales || 0,
+          },
+        });
+      } else {
+        console.warn(`Unexpected response status: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Error fetching metrics:", error.message || error);
+    }
+  };
+
+  useEffect(() => {
+    fetchMetrics(selectedDate);
+  }, [selectedDate]);
+
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+    fetchMetrics(date);
+  };
+
   return (
-    <div className={`flex items-center ${color}`}>
-      <Icon className="h-4 w-4 mr-1" />
-      {Math.abs(value).toFixed(2)}%
+    <div className="container mx-auto p-4 space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold">Metrics Overview</h2>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-[240px] justify-start text-left font-normal"
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {format(selectedDate, "PPP")}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="end">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={handleDateSelect}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard
+          title="Production"
+          todayValue={metrics.Production.today}
+          mtdValue={metrics.Production.mtd}
+          info="Number of items produced"
+        />
+        <MetricCard
+          title="Packing"
+          todayValue={metrics.Packing.today}
+          mtdValue={metrics.Packing.mtd}
+          info="Number of items packed"
+        />
+        <MetricCard
+          title="Total Dispatch"
+          todayValue={metrics["Total Dispatch"].today}
+          mtdValue={metrics["Total Dispatch"].mtd}
+          info="Number of items dispatched"
+        />
+
+        <MetricCard
+          title="Sales"
+          todayValue={metrics.Sales.today}
+          mtdValue={metrics.Sales.mtd}
+          info="Total sales amount in dollars"
+        />
+      </div>
     </div>
   );
 };
 
-function MetricCard({ label, current, previous }) {
-  const percentageChange = getPercentageChange(current, previous);
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{label}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{formatNumber(current)}</div>
-      </CardContent>
-    </Card>
-  );
-}
-
-export default function MTDDashboardDisplay() {
-  const { theme, setTheme } = useTheme();
-  const router = useRouter();
-
-  const currentData = {
-    totalDispatch: 10000,
-    production: 12000,
-    packing: 11000,
-    sales: 9500,
-  };
-
-  const previousData = {
-    totalDispatch: 9500,
-    production: 11500,
-    packing: 10800,
-    sales: 9000,
-  };
-
-  const metrics = [
-    { key: "totalDispatch", label: "Total Dispatch MTD" },
-    { key: "production", label: "Production MTD" },
-    { key: "packing", label: "Packing MTD" },
-    { key: "sales", label: "Sales MTD" },
-  ];
-
-  return (
-    <div className="container mx-auto p-4 space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">MTD Dashboard</h1>
-        <Button
-          onClick={() => router.push("/admin/sales")}
-          className="bg-primary hover:bg-primary/90 text-primary-foreground"
-        >
-          Sales <ExternalLink className="ml-2 h-4 w-4" />
-        </Button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map(({ key, label }) => (
-          <MetricCard
-            key={key}
-            label={label}
-            current={currentData[key]}
-            previous={previousData[key]}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
+export default AdminMetricsDashboard;

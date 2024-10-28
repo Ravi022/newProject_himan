@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import Header from "@/components/Header/Header";
 import Loading from "./loading";
 import ProductionInput from "@/components/ProductionInput/ProductionInput";
+import TotalStocksCard from "@/components/StocksCard/StocksCard";
 
 const ProductionDashboard = () => {
   const [xlsxFiles, setXlsxFiles] = useState([
@@ -114,6 +115,16 @@ const ProductionDashboard = () => {
   return (
     <div>
       <Header saleperson={{ jobId: "productionPerson", name: "production" }} />
+      <div>
+        <div className="flex flex-row justify-start items-center max-w-6xl mx-auto py-6">
+          {" "}
+          <span className="text-3xl font-bold">
+            {" "}
+            Update Metrics: Dispatch, Production, Packing, and Sales
+          </span>
+        </div>
+        <ProductionInput />
+      </div>
       <div className=" p-8">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl font-bold mb-8">Production Dashboard</h1>
@@ -227,7 +238,7 @@ const ProductionDashboard = () => {
         </div>
       </div>
       <div>
-        <ProductionInput />
+        <TotalStocksCard />
       </div>
     </div>
   );

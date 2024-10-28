@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,17 @@ export default function ConfirmationSlider({
     useState(initialPermission); // Initialize from props
   const [showGrantDialog, setShowGrantDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // No initial loading state
+
+  console.log(
+    "initialPermission fetchPermissionStatus",
+    initialPermission,
+    isPermissionGranted
+  );
+
+  // Sync isPermissionGranted with initialPermission whenever it changes
+  useEffect(() => {
+    setIsPermissionGranted(initialPermission);
+  }, [initialPermission]);
 
   const handleSwitchChange = () => {
     setShowGrantDialog(true); // Show confirmation dialog on switch change

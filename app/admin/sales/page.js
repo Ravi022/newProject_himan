@@ -81,6 +81,8 @@ export default function TargetAssignmentDashboard() {
     fetchPermissionStatus();
   }, []); // Fetch on component mount
 
+  console.log(canAssignTasks);
+
   const handleSalespersonSelect = (value) => {
     setSelectedSalesperson(salespeople.find((sp) => sp.name === value));
   };
