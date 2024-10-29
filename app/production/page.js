@@ -17,11 +17,19 @@ import Loading from "./loading";
 import ProductionInput from "@/components/ProductionInput/ProductionInput";
 import TotalStocksCard from "@/components/StocksCard/StocksCard";
 
+// Exportable document types
+export const DOCUMENT_TYPE = [
+  "glovesProduction",
+  "fgStocks",
+  "dispatchDetails",
+  "productionReport",
+];
+
 const ProductionDashboard = () => {
   const [xlsxFiles, setXlsxFiles] = useState([
-    { name: "Gloves Production", file: null },
-    { name: "FG Stocks", file: null },
-    { name: "Dispatch Details", file: null },
+    { name: DOCUMENT_TYPE[0], file: null, uiName: "Gloves Production" },
+    { name: DOCUMENT_TYPE[1], file: null, uiName: "FG Stocks" },
+    { name: DOCUMENT_TYPE[2], file: null, uiName: "Dispatch Details" },
   ]);
   const [xlsmFile, setXlsmFile] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState("");
@@ -43,38 +51,49 @@ const ProductionDashboard = () => {
     "December",
   ];
 
-  // Handle file selection (not upload)
+  // Handle file selection
   const handleFileSelection = (index, file) => {
     const newFiles = [...xlsxFiles];
     newFiles[index].file = file;
     setXlsxFiles(newFiles);
   };
 
-  // Handle file upload on button click
+  // Handle file upload for xlsx files
   const handleXlsxFileUpload = async (index) => {
-    setLoading(true);
     const file = xlsxFiles[index].file;
-    if (file) {
-      try {
-        const formData = new FormData();
-        formData.append("fileType", xlsxFiles[index].name);
-        formData.append("file", file);
+    const accessToken = localStorage.getItem("accessToken");
+    setLoading(true);
 
-        await axios.post("http://127.0.0.1:8000/production/upload", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-
-        alert(`${xlsxFiles[index].name} file uploaded successfully!`);
-      } catch (error) {
-        console.error("Error details:", error);
-        alert(`Error uploading ${xlsxFiles[index].name}: ${error.message}`);
-      } finally {
-        setLoading(false);
-      }
-    } else {
+    if (!file) {
       alert("Please select a file to upload.");
+      setLoading(false);
+      return;
+    }
+
+    if (!accessToken) {
+      console.error("Access token is missing");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("fileType", xlsxFiles[index].name);
+      formData.append("file", file);
+
+      await axios.post("https://kooviot.vercel.app/production/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      alert(`${xlsxFiles[index].name} file uploaded successfully!`);
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert(`Error uploading ${xlsxFiles[index].name}: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,34 +103,51 @@ const ProductionDashboard = () => {
     setXlsxFiles(newFiles);
   };
 
+  // Handle upload for the .xlsm production report file
   const handleXlsmFileUpload = async () => {
-    if (xlsmFile) {
-      try {
-        const formData = new FormData();
-        formData.append("fileType", "Production Report");
-        formData.append("file", xlsmFile);
-        formData.append("reportMonth", selectedMonth);
-        formData.append("reportYear", selectedYear);
+    const accessToken = localStorage.getItem("accessToken");
+    setLoading(true);
 
-        await axios.post("http://127.0.0.1:8000/production/upload", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-        alert("Production report uploaded successfully!");
-      } catch (error) {
-        console.error("Error uploading the production report:", error);
-      }
+    if (!xlsmFile || !selectedMonth || !selectedYear) {
+      alert("Please select a file, month, and year for upload.");
+      setLoading(false);
+      return;
+    }
+
+    if (!accessToken) {
+      console.error("Access token is missing");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("fileType", DOCUMENT_TYPE[3]); // productionReport
+      formData.append("file", xlsmFile);
+      formData.append(
+        "reportMonth",
+        (months.indexOf(selectedMonth) + 1).toString()
+      );
+      formData.append("reportYear", selectedYear);
+
+      await axios.post("https://kooviot.vercel.app/production/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      alert("Production report uploaded successfully!");
+    } catch (error) {
+      console.error("Error uploading production report:", error);
+      alert("Error uploading production report.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div>
-        <Loading />
-      </div>
-    );
-  }
+  if (loading) return <Loading />;
+
   return (
     <div>
       <Header saleperson={{ jobId: "productionPerson", name: "production" }} />
@@ -133,7 +169,7 @@ const ProductionDashboard = () => {
             {xlsxFiles.map((file, index) => (
               <Card key={file.name}>
                 <CardHeader>
-                  <CardTitle>{file.name}</CardTitle>
+                  <CardTitle>{file.uiName}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center space-x-2">
@@ -209,7 +245,7 @@ const ProductionDashboard = () => {
                 <div className="flex items-center space-x-2 flex-grow">
                   <Input
                     type="file"
-                    accept=".xlsm"
+                    accept=".xlsx"
                     onChange={(e) => setXlsmFile(e.target.files[0])}
                     className="flex-grow"
                   />

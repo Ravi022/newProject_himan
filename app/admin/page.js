@@ -79,7 +79,7 @@ export default function AdminDashboard() {
       const accessToken = localStorage.getItem("accessToken");
       try {
         const response = await axios.post(
-          "http://127.0.0.1:8000/admin/files",
+          "https://kooviot.vercel.app/admin/files",
           { fileType: category },
           { headers: { Authorization: `Bearer ${accessToken}` } }
         );
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
 
       try {
         const response = await axios.post(
-          "http://127.0.0.1:8000/admin/files",
+          "https://kooviot.vercel.app/admin/files",
           {
             fileType: "productionReport",
             month: selectedMonth,
@@ -131,7 +131,7 @@ export default function AdminDashboard() {
   return (
     <ProtectedRouteAdmin>
       <div className="min-h-screen bg-background text-foreground">
-        <Header saleperson={{ name: "Admin", jobId: "ADMIN001" }} />
+        <Header />
         <div className="p-8 max-w-7xl flex flex-row justify-center items-center w-full">
           <MTDDashboardDisplay />
         </div>

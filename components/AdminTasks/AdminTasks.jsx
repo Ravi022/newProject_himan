@@ -91,7 +91,7 @@ export default function AdminTasks() {
     try {
       setLoading(true);
       const response = await axios.post(
-        "http://127.0.0.1:8000/admin/adminViewTasks",
+        "https://kooviot.vercel.app/admin/adminViewTasks",
         payload,
         {
           headers: {
@@ -147,11 +147,11 @@ export default function AdminTasks() {
           <CardHeader>
             <CardTitle>Tasks Overview</CardTitle>
             <CardDescription>
-              Completed, Incomplete, and Extra Tasks
+              Completed and Incomplete Task.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
               <ScrollArea className="h-[calc(100vh-30rem)] pr-4">
                 <TaskList
                   tasks={tasksData.completedTasks}
@@ -164,9 +164,9 @@ export default function AdminTasks() {
                   title="Incomplete Tasks"
                 />
               </ScrollArea>
-              <ScrollArea className="h-[calc(100vh-30rem)] pr-4">
+              {/* <ScrollArea className="h-[calc(100vh-30rem)] pr-4">
                 <TaskList tasks={tasksData.extraTasks} title="Extra Tasks" />
-              </ScrollArea>
+              </ScrollArea> */}
             </div>
           </CardContent>
         </Card>

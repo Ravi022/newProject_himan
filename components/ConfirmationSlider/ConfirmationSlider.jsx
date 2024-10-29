@@ -44,7 +44,7 @@ export default function ConfirmationSlider({
     setIsLoading(true); // Start loading
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/admin/setTaskPermission",
+        "https://kooviot.vercel.app/admin/setTaskPermission",
         { canAssignTasks }, // Payload to update permission
         {
           headers: {

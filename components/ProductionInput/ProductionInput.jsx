@@ -38,7 +38,7 @@ const ProductionInput = () => {
         const accessToken = localStorage.getItem("accessToken");
         const currentDate = new Date();
         const response = await axios.post(
-          "http://127.0.0.1:8000/production/mtd/update",
+          "https://kooviot.vercel.app/production/mtd/update",
           {
             year: currentDate.getFullYear().toString(),
             month: currentDate.toLocaleString("default", { month: "long" }),

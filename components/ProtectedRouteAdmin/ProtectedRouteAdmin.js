@@ -12,7 +12,7 @@ const isAuthenticated = async () => {
   }
 
   try {
-    const response = await axios.post("http://127.0.0.1:8000/common/token", {
+    const response = await axios.post("https://kooviot.vercel.app/common/token", {
       refreshToken,
     });
 
@@ -65,7 +65,7 @@ const ProtectedRouteAdmin = ({ children }) => {
 
         try {
           const response = await axios.post(
-            "http://127.0.0.1:8000/common/token",
+            "https://kooviot.vercel.app/common/token",
             {
               refreshToken,
             }

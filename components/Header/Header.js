@@ -16,12 +16,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import companyLogo from "../../assets/companyLogo.png";
 
-// Mock user data (can be removed once integrated with backend)
-const user = {
-  name: "John Doe",
-  jobId: "EMP001",
-  avatarUrl: "https://github.com/shadcn.png",
-};
 
 export default function Header() {
   const [theme, setTheme] = useState("light"); // Default to "light" mode
@@ -70,7 +64,7 @@ export default function Header() {
 
       // Make the logout request to the backend
       const response = await axios.get(
-        "http://localhost:8000/common/logoutUser",
+        "https://kooviot.vercel.app/common/logoutUser",
         {
           headers: {
             Authorization: `Bearer ${accessToken}`, // Send token in the header
@@ -152,10 +146,6 @@ export default function Header() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleChangePasswordClick}>
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Change Password</span>

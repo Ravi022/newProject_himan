@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { CalendarIcon, MapPin, Target } from "lucide-react";
 import axios from "axios";
-
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -16,16 +15,17 @@ import {
 import TaskManager from "../TaskManager/TaskManager";
 import TargetInformation from "../TargetInformation/TargetInformation";
 import TargetPieChart from "./TargetPieChart";
-import LoadingSkeleton from "./LoadingSkeleton"; // Import the skeleton component
+import LoadingSkeleton from "./LoadingSkeleton";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function SalesManagerDashboard() {
   const [date, setDate] = useState(new Date());
   const [assignedTarget, setAssignedTarget] = useState(0);
   const [completedTarget, setCompletedTarget] = useState(0);
-  const [loading, setLoading] = useState(true); // Track loading state
+  const [loading, setLoading] = useState(true);
   const [todayCompletedTarget, setTodayCompletedTarget] = useState(0);
 
-  // Fetch data from backend when component mounts or when the date changes
   const fetchData = async () => {
     const accessToken = localStorage.getItem("accessToken");
 
@@ -34,17 +34,17 @@ export default function SalesManagerDashboard() {
       return;
     }
 
-    setLoading(true); // Start loading
+    setLoading(true);
 
     try {
       const formattedDate = {
         day: date.getDate(),
-        month: date.getMonth() + 1, // JS months are 0-based
+        month: date.getMonth() + 1,
         year: date.getFullYear(),
       };
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/user/getMonthlyStatsAndDailyTasks",
+        "https://kooviot.vercel.app/user/getMonthlyStatsAndDailyTasks",
         formattedDate,
         {
           headers: {
@@ -52,16 +52,43 @@ export default function SalesManagerDashboard() {
           },
         }
       );
-      console.log("response of getMonthlyStatsAndDailyTasks", response.data);
-      setAssignedTarget(response.data.monthlyAssignedTarget);
-      setCompletedTarget(response.data.monthlyCompletedTarget);
-      setTodayCompletedTarget(response.data.dailyCompletedTarget);
+
+      if (response.status === 200) {
+        setAssignedTarget(response.data.monthlyAssignedTarget);
+        setCompletedTarget(response.data.monthlyCompletedTarget);
+        setTodayCompletedTarget(response.data.dailyCompletedTarget);
+      } else {
+        toast.error("Unexpected response. Please try again.");
+      }
     } catch (error) {
+      // Handle errors based on status codes
+      if (error.response) {
+        switch (error.response.status) {
+          case 404:
+            toast.error("No target data found for the selected date.");
+            break;
+          case 400:
+            toast.error(
+              "Invalid request. Please check the date and try again."
+            );
+            break;
+          default:
+            toast.error("Error fetching data. Please try again later.");
+            break;
+        }
+      } else if (error.request) {
+        toast.error(
+          "No response from the server. Please check your network connection."
+        );
+      } else {
+        toast.error("An unexpected error occurred. Please try again.");
+      }
       console.error("Error fetching data:", error);
     } finally {
-      setLoading(false); // Stop loading once data is fetched
+      setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchData();
   }, [date]);
@@ -80,7 +107,18 @@ export default function SalesManagerDashboard() {
     setDate(selectedDate);
   };
 
-  // Render loading skeleton if data is being fetched
+  const targetCompletionPercentage = assignedTarget
+    ? (completedTarget / assignedTarget) * 100
+    : 0;
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
   if (loading) {
     return <LoadingSkeleton />;
   }
@@ -158,7 +196,8 @@ export default function SalesManagerDashboard() {
               <div className="flex items-center space-x-2">
                 <Target className="h-5 w-5 text-muted-foreground" />
                 <span>
-                  Total Target Completed: {salesManager.totalTargetCompleted}%
+                  Total Target Completed:{" "}
+                  {targetCompletionPercentage.toFixed(2)}%
                 </span>
               </div>
             </CardContent>
@@ -166,6 +205,9 @@ export default function SalesManagerDashboard() {
           <TaskManager />
         </div>
       </div>
+
+      {/* Toast Container for Notifications */}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </div>
   );
 }

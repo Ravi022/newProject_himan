@@ -74,7 +74,7 @@ export default function TargetHistory() {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/admin/barchart",
+        "https://kooviot.vercel.app/admin/barchart",
         {
           month: month.toString(),
           year: year.toString(),
@@ -171,7 +171,7 @@ export default function TargetHistory() {
         </Popover>
 
         {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={400} className="p-5"> 
             <BarChart
               data={chartData}
               margin={{

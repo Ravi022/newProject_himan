@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const months = [
   "Jan",
@@ -38,6 +40,12 @@ const months = [
 ];
 
 const salesPersons = [
+  {
+    id: "SP000",
+    name: "Total Monthly Details",
+    jobId: "totalMonthlyDetails",
+    area: "Pan India",
+  },
   { id: "SP001", name: "Ravikumar N", jobId: "KIOL2238", area: "Bangalore" },
   { id: "SP002", name: "Sugumar R", jobId: "KIOL2236", area: "Chennai, TN" },
   { id: "SP003", name: "Vineesh Mehta", jobId: "KIOL2239", area: "Delhi" },
@@ -68,64 +76,89 @@ export default function TargetHistory() {
   });
 
   const handleMonthSelect = (monthIndex) => {
-    const newDate = new Date(date.getFullYear(), monthIndex, 1);
-    setDate(newDate);
+    setDate(new Date(date.getFullYear(), monthIndex, 1));
     setIsOpen(false);
-    fetchTargetData(monthIndex + 1, date.getFullYear()); // Month is 0-indexed, so add 1
+    fetchTargetData(monthIndex + 1, date.getFullYear());
   };
 
   const handleYearChange = (increment) => {
-    const newDate = new Date(
-      date.getFullYear() + increment,
-      date.getMonth(),
-      1
-    );
-    setDate(newDate);
+    setDate(new Date(date.getFullYear() + increment, date.getMonth(), 1));
+  };
+
+  const getPayload = (month, year, jobId = "") => {
+    return jobId === "totalMonthlyDetails"
+      ? { month: month.toString(), year: year.toString() }
+      : { jobId, month: month.toString(), year: year.toString() };
   };
 
   const fetchTargetData = async (month, year) => {
-    const token = localStorage.getItem("accessToken"); // Retrieve the Bearer token from local storage
+    const token = localStorage.getItem("accessToken");
     const selectedPerson = salesPersons.find(
       (sp) => sp.id === selectedSalesPerson
     );
 
     if (selectedPerson) {
+      const url =
+        selectedPerson.jobId === "totalMonthlyDetails"
+          ? "https://kooviot.vercel.app/admin/totalStatsOfSalesperson"
+          : "https://kooviot.vercel.app/admin/monthlyStats";
+
       try {
         const response = await axios.post(
-          "http://127.0.0.1:8000/admin/monthlyStats",
+          url,
+          getPayload(month, year, selectedPerson.jobId),
           {
-            jobId: selectedPerson.jobId,
-            month: month.toString(), // Convert month to string
-            year: year.toString(), // Convert year to string
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`, // Add the Bearer token to the headers
-            },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
 
-        // Update targetData with the response data
-        setTargetData({
-          totalAssignedTarget: response.data.totalAssignedTarget,
-          totalCompletedTarget: response.data.totalCompletedTarget,
-          totalPendingTarget: response.data.totalPendingTarget,
-        });
+        if (response.status === 200) {
+          setTargetData({
+            totalAssignedTarget:
+              response.data.totalAssignedTargets ||
+              response.data.totalAssignedTarget,
+            totalCompletedTarget:
+              response.data.totalCompletedTargets ||
+              response.data.totalCompletedTarget,
+            totalPendingTarget:
+              response.data.totalPendingTargets ||
+              response.data.totalPendingTarget,
+          });
+          toast.success("Target data fetched successfully");
+        } else {
+          toast.warning("Unexpected response status. Please try again later.");
+        }
       } catch (error) {
+        if (error.response) {
+          if (error.response.status === 404) {
+            toast.error("Data not found for the specified month and year.");
+          } else {
+            toast.error(
+              `Error: ${
+                error.response.data.message || "Failed to fetch target data"
+              }`
+            );
+          }
+        } else if (error.request) {
+          toast.error(
+            "No response from server. Please check your network connection."
+          );
+        } else {
+          toast.error("An unexpected error occurred. Please try again.");
+        }
         console.error("Error fetching target data:", error);
-        alert("Failed to fetch target data. Please try again.");
       }
     }
   };
 
   useEffect(() => {
     if (selectedSalesPerson) {
-      fetchTargetData(date.getMonth() + 1, date.getFullYear()); // Fetch data when salesperson is selected
+      fetchTargetData(date.getMonth() + 1, date.getFullYear());
     }
   }, [selectedSalesPerson, date]);
 
   return (
-    <Card className="">
+    <Card>
       <CardHeader>
         <CardTitle>Sales Person Target Assignment</CardTitle>
       </CardHeader>
@@ -152,7 +185,6 @@ export default function TargetHistory() {
                   onClick={() => handleYearChange(-1)}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  <span className="sr-only">Previous year</span>
                 </Button>
                 <div className="text-sm font-medium">
                   {format(date, "yyyy")}
@@ -163,7 +195,6 @@ export default function TargetHistory() {
                   onClick={() => handleYearChange(1)}
                 >
                   <ChevronRight className="h-4 w-4" />
-                  <span className="sr-only">Next year</span>
                 </Button>
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -193,7 +224,9 @@ export default function TargetHistory() {
           <SelectContent>
             {salesPersons.map((sp) => (
               <SelectItem key={sp.id} value={sp.id}>
-                {sp.name} (Job ID: {sp.jobId})
+                {sp.jobId === "totalMonthlyDetails"
+                  ? sp.name
+                  : `${sp.name} (Job ID: ${sp.jobId})`}
               </SelectItem>
             ))}
           </SelectContent>
@@ -201,18 +234,19 @@ export default function TargetHistory() {
 
         <div className="space-y-2">
           <p>
-            <strong>Total Assigned Targets:</strong>{" "}
-            ₹{targetData.totalAssignedTarget}
+            <strong>Total Assigned Targets:</strong> ₹
+            {targetData.totalAssignedTarget}
           </p>
           <p>
             <strong>Pending Targets:</strong> ₹{targetData.totalPendingTarget}
           </p>
           <p>
-            <strong>Completed Targets:</strong>{" "}
-            ₹{targetData.totalCompletedTarget}
+            <strong>Completed Targets:</strong> ₹
+            {targetData.totalCompletedTarget}
           </p>
         </div>
       </CardContent>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
     </Card>
   );
 }
