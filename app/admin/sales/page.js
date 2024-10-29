@@ -29,6 +29,7 @@ import TargetHistory from "@/components/ShowAssignTargetToAdmin/TargetHistory";
 import ConfirmationSlider from "@/components/ConfirmationSlider/ConfirmationSlider.jsx";
 import AdminTasks from "../../../components/AdminTasks/AdminTasks.jsx";
 import ProtectedRouteAdmin from "@/components/ProtectedRouteAdmin/ProtectedRouteAdmin.js";
+import TargetVsSalespersonChart from "@/components/BarGraph/BarGraph.js";
 
 // Mock data
 const salespeople = [
@@ -39,16 +40,6 @@ const salespeople = [
   { name: "Bharat Lal Dubey", jobId: "KIOL2064", area: "Maharashtra" },
   { name: "Sushila Shaw", jobId: "KIOL2225", area: "Kolkata" },
   { name: "Ardhendu Aditya", jobId: "KIOL2234", area: "Kolkata" },
-];
-
-const mockBarChartData = [
-  { name: "Bharat Lal Dubey", completed: 75, pending: 25 },
-  { name: "Soma Naveen Chandra", completed: 60, pending: 40 },
-  { name: "Sugumar R", completed: 80, pending: 20 },
-  { name: "Vineesh Mahta", completed: 70, pending: 30 },
-  { name: "Ravi Kumar N", completed: 65, pending: 35 },
-  { name: "Sushila Shav", completed: 85, pending: 15 },
-  { name: "Raunak Kalal", completed: 55, pending: 45 },
 ];
 
 export default function TargetAssignmentDashboard() {
@@ -108,6 +99,7 @@ export default function TargetAssignmentDashboard() {
         alert(
           `Successfully assigned target of ${targetValue} for ${selectedSalesperson.name}`
         );
+        fetchTargetData();
         setTargetValue(""); // Clear the input after successful assignment
       }
     } catch (error) {
@@ -171,42 +163,9 @@ export default function TargetAssignmentDashboard() {
         </div>
 
         {/* Section 3: Bar Chart (Target vs Salesperson) */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Target vs Salesperson</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart
-                data={mockBarChartData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar
-                  dataKey="completed"
-                  stackId="a"
-                  fill="#8884d8"
-                  name="Completed Targets"
-                />
-                <Bar
-                  dataKey="pending"
-                  stackId="a"
-                  fill="#82ca9d"
-                  name="Pending Targets"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <div>
+          <TargetVsSalespersonChart />
+        </div>
       </div>
     </div>
   );
