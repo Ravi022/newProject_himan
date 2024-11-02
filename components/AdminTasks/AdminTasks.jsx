@@ -91,7 +91,7 @@ export default function AdminTasks() {
     try {
       setLoading(true);
       const response = await axios.post(
-        "https://kooviot.vercel.app/admin/adminViewTasks",
+        "https://new-project-backend.vercel.app/admin/adminViewTasks",
         payload,
         {
           headers: {

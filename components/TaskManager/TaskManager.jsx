@@ -23,7 +23,7 @@ export default function TaskManager() {
 
     try {
       const response = await axios.get(
-        "https://kooviot.vercel.app/user/canAddTasks",
+        "https://new-project-backend.vercel.app/user/canAddTasks",
         config
       );
 
@@ -58,7 +58,7 @@ export default function TaskManager() {
 
     try {
       const response = await axios.post(
-        "https://kooviot.vercel.app/user/assignDailyTask",
+        "https://new-project-backend.vercel.app/user/assignDailyTask",
         taskData,
         config
       );
@@ -86,7 +86,7 @@ export default function TaskManager() {
 
     try {
       await axios.post(
-        "https://kooviot.vercel.app/user/markTaskAsCompleted",
+        "https://new-project-backend.vercel.app/user/markTaskAsCompleted",
         { taskId },
         config
       );
@@ -153,7 +153,7 @@ export default function TaskManager() {
       </form>
 
       <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-3">Today's Tasks</h2>
+        <h2 className="text-xl font-semibold mb-3">Today&apos;s Tasks</h2>
         {incompleteTasks.length === 0 ? (
           <p className="text-muted-foreground">
             No tasks for today. Add a new task!

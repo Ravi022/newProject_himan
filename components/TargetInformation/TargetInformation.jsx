@@ -18,7 +18,7 @@ export default function TargetInformation({
   assignedTarget,
   completedTarget,
   fetchData,
-  todayCompletedTarget
+  todayCompletedTarget,
 }) {
   console.log(assignedTarget, completedTarget);
   const [achievedTarget, setAchievedTarget] = useState("");
@@ -63,7 +63,7 @@ export default function TargetInformation({
       };
 
       const response = await axios.post(
-        "https://kooviot.vercel.app/user/updateDailyTarget",
+        "https://new-project-backend.vercel.app/user/updateDailyTarget",
         payload,
         config
       );
@@ -107,7 +107,9 @@ export default function TargetInformation({
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="achieved-target">Today's Target Achieved</Label>
+            <Label htmlFor="achieved-target">
+              Today&apos;s Target Achieved
+            </Label>
             <Input
               id="achieved-target"
               type="number"

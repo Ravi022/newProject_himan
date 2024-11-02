@@ -30,7 +30,7 @@ export default function LoginPage() {
     setError(null); // Clear any previous errors
 
     try {
-      const response = await axios.post("https://kooviot.vercel.app/auth/login", {
+      const response = await axios.post("https://new-project-backend.vercel.app/auth/login", {
         jobId, // Send jobId instead of username
         password,
       });

@@ -28,7 +28,6 @@ import Header from "@/components/Header/Header";
 import TargetHistory from "@/components/ShowAssignTargetToAdmin/TargetHistory";
 import ConfirmationSlider from "@/components/ConfirmationSlider/ConfirmationSlider.jsx";
 import AdminTasks from "../../../components/AdminTasks/AdminTasks.jsx";
-import ProtectedRouteAdmin from "@/components/ProtectedRouteAdmin/ProtectedRouteAdmin.js";
 import TargetVsSalespersonChart from "@/components/BarGraph/BarGraph.js";
 
 // Mock data
@@ -53,7 +52,7 @@ export default function TargetAssignmentDashboard() {
     const token = localStorage.getItem("accessToken"); // Retrieve the Bearer token from local storage
     try {
       const response = await axios.get(
-        "https://kooviot.vercel.app/admin/canSalespersonAddTasks",
+        "https://new-project-backend.vercel.app/admin/canSalespersonAddTasks",
         {
           headers: {
             Authorization: `Bearer ${token}`, // Add the Bearer token to the headers
@@ -83,7 +82,7 @@ export default function TargetAssignmentDashboard() {
     const token = localStorage.getItem("accessToken"); // Retrieve the Bearer token from local storage
     try {
       const response = await axios.post(
-        "https://kooviot.vercel.app/admin/monthlyTarget",
+        "https://new-project-backend.vercel.app/admin/monthlyTarget",
         {
           target: parseInt(targetValue, 10), // Convert string to number
           jobId: selectedSalesperson.jobId, // Include jobId in the payload
@@ -99,7 +98,7 @@ export default function TargetAssignmentDashboard() {
         alert(
           `Successfully assigned target of ${targetValue} for ${selectedSalesperson.name}`
         );
-        fetchTargetData();
+        // fetchTargetData();
         setTargetValue(""); // Clear the input after successful assignment
       }
     } catch (error) {
