@@ -41,7 +41,7 @@ export default function TotalStocksCard() {
 
     try {
       const response = await axios.post(
-        "https://new-project-backend.vercel.app/production/stocks/update",
+        "https://kooviot.vercel.app/production/stocks/update",
         { packedStocks, unpackedStocks },
         {
           headers: {

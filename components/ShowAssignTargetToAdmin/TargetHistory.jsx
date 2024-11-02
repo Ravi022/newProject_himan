@@ -100,8 +100,8 @@ export default function TargetHistory() {
     if (selectedPerson) {
       const url =
         selectedPerson.jobId === "totalMonthlyDetails"
-          ? "https://new-project-backend.vercel.app/admin/totalStatsOfSalesperson"
-          : "https://new-project-backend.vercel.app/admin/monthlyStats";
+          ? "https://kooviot.vercel.app/admin/totalStatsOfSalesperson"
+          : "https://kooviot.vercel.app/admin/monthlyStats";
 
       try {
         const response = await axios.post(

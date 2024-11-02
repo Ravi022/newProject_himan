@@ -81,7 +81,7 @@ const ProductionDashboard = () => {
       formData.append("fileType", xlsxFiles[index].name);
       formData.append("file", file);
 
-      await axios.post("https://new-project-backend.vercel.app/production/upload", formData, {
+      await axios.post("https://kooviot.vercel.app/production/upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${accessToken}`,
@@ -130,7 +130,7 @@ const ProductionDashboard = () => {
       );
       formData.append("reportYear", selectedYear);
 
-      await axios.post("https://new-project-backend.vercel.app/production/upload", formData, {
+      await axios.post("https://kooviot.vercel.app/production/upload", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${accessToken}`,

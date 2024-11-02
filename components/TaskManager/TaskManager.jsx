@@ -23,7 +23,7 @@ export default function TaskManager() {
 
     try {
       const response = await axios.get(
-        "https://new-project-backend.vercel.app/user/canAddTasks",
+        "https://kooviot.vercel.app/user/canAddTasks",
         config
       );
 
@@ -58,7 +58,7 @@ export default function TaskManager() {
 
     try {
       const response = await axios.post(
-        "https://new-project-backend.vercel.app/user/assignDailyTask",
+        "https://kooviot.vercel.app/user/assignDailyTask",
         taskData,
         config
       );
@@ -86,7 +86,7 @@ export default function TaskManager() {
 
     try {
       await axios.post(
-        "https://new-project-backend.vercel.app/user/markTaskAsCompleted",
+        "https://kooviot.vercel.app/user/markTaskAsCompleted",
         { taskId },
         config
       );

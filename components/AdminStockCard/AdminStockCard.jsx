@@ -50,7 +50,7 @@ const StockCard = () => {
 
     try {
       const response = await axios.post(
-        "https://new-project-backend.vercel.app/admin/stocks/retrieve",
+        "https://kooviot.vercel.app/admin/stocks/retrieve",
         payload,
         {
           headers: {

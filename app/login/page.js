@@ -12,83 +12,68 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LockIcon, UserIcon } from "lucide-react";
-import axios from "axios"; // Import axios
+import axios from "axios";
 import { useRouter } from "next/navigation";
-import { ro } from "date-fns/locale";
 
 export default function LoginPage() {
   const [jobId, setJobId] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false); // Optional: To handle loading state
-  const [error, setError] = useState(null); // Optional: To handle errors
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const router = useRouter();
 
+  const handleDemoLogin = (role) => {
+    // Set demo credentials based on the selected role
+    if (role === "salesperson") {
+      setJobId("salesperson");
+      setPassword("12345");
+    } else if (role === "admin") {
+      setJobId("admin");
+      setPassword("12345");
+    } else if (role === "production") {
+      setJobId("production");
+      setPassword("12345");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // Start loading
-    setError(null); // Clear any previous errors
+    setLoading(true);
+    setError(null);
 
     try {
       const response = await axios.post("https://new-project-backend.vercel.app/auth/login", {
-        jobId, // Send jobId instead of username
+        jobId,
         password,
       });
-      console.log("Login successful:", response.data);
 
-      // Handle successful login, e.g., save token, redirect, etc.
       if (response.status === 200) {
         localStorage.setItem("accessToken", response.data.data.accessToken);
         localStorage.setItem("refreshToken", response.data.data.refreshToken);
-        console.log(
-          localStorage.getItem("accessToken"),
-          localStorage.getItem("refreshToken")
-        );
 
         const userRole = response.data.data.user.role;
-        if (userRole === "salesperson") {
-          const userDetails = {
-            name: response.data.data.user.fullName,
+        const userDetails = {
+          name: response.data.data.user.fullName,
+          jobId: response.data.data.user.jobId,
+          role: userRole,
+          ...(userRole === "salesperson" && {
             area: response.data.data.user.area,
-            jobId: response.data.data.user.jobId,
             totalTargetCompleted: response.data.data.user.totalTargetCompleted,
-            role: userRole,
-          };
+          }),
+        };
+        
+        localStorage.setItem("userDetails", JSON.stringify(userDetails));
 
-          // Convert the object to a JSON string and store it in localStorage
-          localStorage.setItem("userDetails", JSON.stringify(userDetails));
-          console.log(userDetails);
-          router.push("/");
-        } else if (userRole === "admin") {
-          console.log("admin login:", response.data);
-          const adminDetails = {
-            name: response.data.data.user.fullName,
-            jobId: response.data.data.user.jobId,
-            role: userRole,
-          };
-          localStorage.setItem("userDetails", JSON.stringify(adminDetails));
-          router.push("/admin");
-        } else if (userRole === "production") {
-          console.log("production login:", response.data);
-          const productionDetails = {
-            name: response.data.data.user.fullName,
-            jobId: response.data.data.user.jobId,
-            role: userRole,
-          };
-          localStorage.setItem(
-            "userDetails",
-            JSON.stringify(productionDetails)
-          );
-          router.push("/production");
-        } else {
-          router.push("/login");
-        }
+        if (userRole === "salesperson") router.push("/");
+        else if (userRole === "admin") router.push("/admin");
+        else if (userRole === "production") router.push("/production");
       }
     } catch (err) {
       console.error("Login failed:", err);
       setError("Login failed. Please check your credentials and try again.");
     } finally {
-      setLoading(false); // End loading
+      setLoading(false);
     }
   };
 
@@ -105,6 +90,21 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="demoSelect" className="text-gray-200">
+                Demo Login
+              </Label>
+              <select
+                id="demoSelect"
+                onChange={(e) => handleDemoLogin(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 text-gray-100 placeholder-gray-400 rounded-md"
+              >
+                <option value="">Select a role</option>
+                <option value="salesperson">Salesperson</option>
+                <option value="admin">Admin</option>
+                <option value="production">Production</option>
+              </select>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="jobId" className="text-gray-200">
                 Job Id
@@ -149,7 +149,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={loading} // Disable button while loading
+              disabled={loading}
             >
               {loading ? "Logging in..." : "Log in"}
             </Button>
