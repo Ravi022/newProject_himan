@@ -74,7 +74,7 @@ export default function TargetHistory() {
 
     try {
       const response = await axios.post(
-        "https://kooviot.vercel.app/admin/barchart",
+        "https://new-project-backend.vercel.app/admin/barchart",
         {
           month: month.toString(),
           year: year.toString(),

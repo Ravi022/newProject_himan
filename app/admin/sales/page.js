@@ -52,7 +52,7 @@ export default function TargetAssignmentDashboard() {
     const token = localStorage.getItem("accessToken"); // Retrieve the Bearer token from local storage
     try {
       const response = await axios.get(
-        "https://kooviot.vercel.app/admin/canSalespersonAddTasks",
+        "https://new-project-backend.vercel.app/admin/canSalespersonAddTasks",
         {
           headers: {
             Authorization: `Bearer ${token}`, // Add the Bearer token to the headers
@@ -82,7 +82,7 @@ export default function TargetAssignmentDashboard() {
     const token = localStorage.getItem("accessToken"); // Retrieve the Bearer token from local storage
     try {
       const response = await axios.post(
-        "https://kooviot.vercel.app/admin/monthlyTarget",
+        "https://new-project-backend.vercel.app/admin/monthlyTarget",
         {
           target: parseInt(targetValue, 10), // Convert string to number
           jobId: selectedSalesperson.jobId, // Include jobId in the payload

@@ -62,7 +62,7 @@ const AdminMetricsDashboard = () => {
 
     try {
       const response = await axios.post(
-        "https://kooviot.vercel.app/admin/mtd/values",
+        "https://new-project-backend.vercel.app/admin/mtd/values",
         { year, month, day },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );

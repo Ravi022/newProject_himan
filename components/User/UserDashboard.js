@@ -44,7 +44,7 @@ export default function SalesManagerDashboard() {
       };
 
       const response = await axios.post(
-        "https://kooviot.vercel.app/user/getMonthlyStatsAndDailyTasks",
+        "https://new-project-backend.vercel.app/user/getMonthlyStatsAndDailyTasks",
         formattedDate,
         {
           headers: {

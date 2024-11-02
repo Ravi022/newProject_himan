@@ -64,7 +64,7 @@ export default function Header() {
 
       // Make the logout request to the backend
       const response = await axios.get(
-        "https://kooviot.vercel.app/common/logoutUser",
+        "https://new-project-backend.vercel.app/common/logoutUser",
         {
           headers: {
             Authorization: `Bearer ${accessToken}`, // Send token in the header
