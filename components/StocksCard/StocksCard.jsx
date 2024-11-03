@@ -17,15 +17,16 @@ export default function TotalStocksCard() {
   const [error, setError] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date());
 
-  // Normalize and get year, month, and day from the selected date
+  // Get normalized date components from the selected date
   const getNormalizedDate = () => {
     const year = selectedDate.getFullYear().toString();
-    const month = (selectedDate.getMonth() + 1).toString().padStart(2, "0"); // Add 1 to month as getMonth() is zero-indexed
+    const month = (selectedDate.getMonth() + 1).toString().padStart(2, "0");
     const day = selectedDate.getDate().toString().padStart(2, "0");
 
     return { year, month, day };
   };
 
+  // Update total stocks whenever packed or unpacked stocks change
   useEffect(() => {
     const packed = parseInt(packedStocks) || 0;
     const unpacked = parseInt(unpackedStocks) || 0;
@@ -53,25 +54,23 @@ export default function TotalStocksCard() {
     // Get normalized date values from the selected date
     const { year, month, day } = getNormalizedDate();
 
-    const payload = {
-      year,
-      month,
-      day,
-      packedStocks: parseInt(packedStocks) || 0,
-      unpackedStocks: parseInt(unpackedStocks) || 0,
-    };
-    console.log(payload);
     try {
       const response = await axios.post(
         "https://new-project-backend.vercel.app/production/stocks/update",
-        payload,
+        {
+          year,
+          month,
+          day,
+          packedStocks: parseInt(packedStocks) || 0,
+          unpackedStocks: parseInt(unpackedStocks) || 0,
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      console.log("response.data packed and uppacked :", response.data);
+
       if (response.status === 200) {
         toast.success("Stocks updated successfully");
       } else {
@@ -92,7 +91,7 @@ export default function TotalStocksCard() {
           Total Stocks
         </CardTitle>
         <div className="flex items-center space-x-2">
-          <Label htmlFor="date-picker">Date:</Label>
+          <Label htmlFor="date-picker">Select Date:</Label>
           <DatePicker
             id="date-picker"
             selected={selectedDate}
