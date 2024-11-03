@@ -60,12 +60,15 @@ const AdminMetricsDashboard = () => {
     const day = date.getDate();
     const accessToken = localStorage.getItem("accessToken");
 
+    const payload = { year, month, day: day.toString().padStart(2, "0") };
     try {
       const response = await axios.post(
         "https://new-project-backend.vercel.app/admin/mtd/values",
-        { year, month, day },
+        payload,
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
+
+      console.log("response of admin stocks", response.data);
 
       if (response.status === 200) {
         const data = response.data;

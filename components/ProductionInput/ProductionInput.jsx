@@ -4,15 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon, Info } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent,TooltipProvider } from "@/components/ui/tooltip"; // Import Tooltip components
+import { format } from "date-fns";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Info } from "lucide-react";
 
 const categories = [
   { name: "Total Dispatch", info: "Total number of items dispatched" },
@@ -23,6 +21,7 @@ const categories = [
 
 const ProductionInput = () => {
   const [metrics, setMetrics] = useState({});
+  const [selectedDate, setSelectedDate] = useState(new Date()); // Calendar date state
 
   const handleInputChange = (category, value) => {
     setMetrics((prev) => ({
@@ -31,18 +30,27 @@ const ProductionInput = () => {
     }));
   };
 
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
+  };
+
   const handleSubmit = async (category) => {
     const value = metrics[category];
     if (value && !isNaN(Number(value))) {
       try {
         const accessToken = localStorage.getItem("accessToken");
-        const currentDate = new Date();
+
+        // Extract year, month, day from selected date
+        const year = selectedDate.getFullYear().toString();
+        const month = selectedDate.toLocaleString("default", { month: "long" });
+        const day = selectedDate.getDate().toString().padStart(2, "0");
+
         const response = await axios.post(
           "https://new-project-backend.vercel.app/production/mtd/update",
           {
-            year: currentDate.getFullYear().toString(),
-            month: currentDate.toLocaleString("default", { month: "long" }),
-            day: currentDate.getDate().toString().padStart(2, "0"),
+            year,
+            month,
+            day,
             mtdType: category.toLowerCase().replace(" ", ""),
             value: Number(value),
           },
@@ -81,22 +89,43 @@ const ProductionInput = () => {
   };
 
   return (
-    <TooltipProvider>
+    <div>
+      <ToastContainer />
       <Card className="w-full max-w-6xl mx-auto">
         <CardContent>
+          <div className="flex flex-row justify-end items-center my-4">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {format(selectedDate, "PPP")}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={handleDateSelect}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {categories.map((category) => (
               <div key={category.name} className="space-y-4">
                 <div className="flex items-center space-x-2">
                   <h3 className="text-lg font-semibold">{category.name}</h3>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="h-4 w-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{category.info}</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="h-4 w-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{category.info}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
@@ -124,8 +153,7 @@ const ProductionInput = () => {
           </div>
         </CardContent>
       </Card>
-      <ToastContainer />
-    </TooltipProvider>
+    </div>
   );
 };
 

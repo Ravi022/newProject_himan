@@ -32,8 +32,8 @@ import TargetVsSalespersonChart from "@/components/BarGraph/BarGraph.js";
 
 // Mock data
 const salespeople = [
-  { name: "Ravikumar N", jobId: "KIOL2238", area: "Bangalore" },
-  { name: "Sugumar R", jobId: "KIOL2236", area: "Chennai, TN" },
+  { name: "salesperson", jobId: "salesperson", area: "Bangalore" },
+  { name: "salesperson second", jobId: "salesperson2", area: "Chennai, TN" },
   { name: "Vineesh Mehta", jobId: "KIOL2239", area: "Delhi" },
   { name: "Soma Naveen Chandra", jobId: "KIOL2070", area: "Hyderabad" },
   { name: "Bharat Lal Dubey", jobId: "KIOL2064", area: "Maharashtra" },

@@ -44,14 +44,12 @@ export default function LoginPage() {
     setLoading(true); // Start loading
     setError(null); // Clear any previous errors
 
+    console.log(jobId, password);
     try {
-      const response = await axios.post(
-        "https://new-project-backend.vercel.app/auth/login",
-        {
-          jobId, // Send jobId instead of username
-          password,
-        }
-      );
+      const response = await axios.post("https://new-project-backend.vercel.app/auth/login", {
+        jobId, // Send jobId instead of username
+        password,
+      });
       console.log("Login successful:", response.data);
 
       // Handle successful login, e.g., save token, redirect, etc.
