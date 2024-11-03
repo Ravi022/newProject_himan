@@ -2,19 +2,30 @@
 
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { toast } from "react-toastify"; // Import toast library
+import DatePicker from "react-datepicker";
+import { toast } from "react-toastify";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function TotalStocksCard() {
   const [packedStocks, setPackedStocks] = useState("");
   const [unpackedStocks, setUnpackedStocks] = useState("");
   const [total, setTotal] = useState(0);
   const [error, setError] = useState("");
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
-  // Update total stocks whenever packed or unpacked stocks change
+  // Normalize and get year, month, and day from the selected date
+  const getNormalizedDate = () => {
+    const year = selectedDate.getFullYear().toString();
+    const month = (selectedDate.getMonth() + 1).toString().padStart(2, "0"); // Add 1 to month as getMonth() is zero-indexed
+    const day = selectedDate.getDate().toString().padStart(2, "0");
+
+    return { year, month, day };
+  };
+
   useEffect(() => {
     const packed = parseInt(packedStocks) || 0;
     const unpacked = parseInt(unpackedStocks) || 0;
@@ -39,17 +50,28 @@ export default function TotalStocksCard() {
       return;
     }
 
+    // Get normalized date values from the selected date
+    const { year, month, day } = getNormalizedDate();
+
+    const payload = {
+      year,
+      month,
+      day,
+      packedStocks: parseInt(packedStocks) || 0,
+      unpackedStocks: parseInt(unpackedStocks) || 0,
+    };
+    console.log(payload);
     try {
       const response = await axios.post(
         "https://new-project-backend.vercel.app/production/stocks/update",
-        { packedStocks, unpackedStocks },
+        payload,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-
+      console.log("response.data packed and uppacked :", response.data);
       if (response.status === 200) {
         toast.success("Stocks updated successfully");
       } else {
@@ -65,10 +87,20 @@ export default function TotalStocksCard() {
 
   return (
     <Card className="w-full max-w-6xl mx-auto">
-      <CardHeader>
+      <CardHeader className="flex flex-col sm:flex-row justify-between items-center">
         <CardTitle className="text-2xl font-bold text-center">
           Total Stocks
         </CardTitle>
+        <div className="flex items-center space-x-2">
+          <Label htmlFor="date-picker">Date:</Label>
+          <DatePicker
+            id="date-picker"
+            selected={selectedDate}
+            onChange={(date) => setSelectedDate(date)}
+            className="border rounded p-2"
+            dateFormat="MMMM d, yyyy"
+          />
+        </div>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
